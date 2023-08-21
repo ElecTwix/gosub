@@ -7,34 +7,34 @@ import (
 )
 
 type GoSub struct {
-	clusterMap map[string]cluster.Cluster
+	ClusterMap map[string]cluster.Cluster
 }
 
 func NewGoSub() *GoSub {
 	return &GoSub{
-		clusterMap: make(map[string]cluster.Cluster),
+		ClusterMap: make(map[string]cluster.Cluster),
 	}
 }
 
 func (g *GoSub) AddCluster(id string, c cluster.Cluster) {
-	g.clusterMap[id] = c
+	g.ClusterMap[id] = c
 }
 
 func (g *GoSub) RemoveCluster(id string) {
-	g.clusterMap[id].Close()
-	delete(g.clusterMap, id)
+	g.ClusterMap[id].Close()
+	delete(g.ClusterMap, id)
 }
 
 func (g *GoSub) AddSub(ClusterID, SubID string, writer io.WriteCloser) {
-	g.clusterMap[ClusterID].AddSub(SubID, writer)
+	g.ClusterMap[ClusterID].AddSub(SubID, writer)
 }
 
 func (g *GoSub) RemoveSub(ClusterID, SubID string) {
-	g.clusterMap[ClusterID].RemoveSub(SubID)
+	g.ClusterMap[ClusterID].RemoveSub(SubID)
 }
 
 func (g *GoSub) WriteAll(p []byte) (n int, err error) {
-	for _, c := range g.clusterMap {
+	for _, c := range g.ClusterMap {
 		n, err = c.Write(p)
 		if err != nil {
 			return
@@ -44,19 +44,23 @@ func (g *GoSub) WriteAll(p []byte) (n int, err error) {
 }
 
 func (g *GoSub) WriteToCluster(ClusterID string, p []byte) (n int, err error) {
-	return g.clusterMap[ClusterID].Write(p)
+	return g.ClusterMap[ClusterID].Write(p)
 }
 
 func (g *GoSub) WriteToSub(ClusterID, SubID string, p []byte) (n int, err error) {
-	return g.clusterMap[ClusterID].WriteToSub(SubID, p)
+	return g.ClusterMap[ClusterID].WriteToSub(SubID, p)
 }
 
 func (g *GoSub) Close() (err error) {
-	for _, c := range g.clusterMap {
+	for _, c := range g.ClusterMap {
 		err = c.Close()
 		if err != nil {
 			return
 		}
 	}
 	return
+}
+
+func (g *GoSub) CloseCluster(ClusterID string) (err error) {
+	return g.ClusterMap[ClusterID].Close()
 }
